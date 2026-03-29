@@ -1,16 +1,62 @@
-name: Test WeChat
+name: 每日学科新闻早报
 
 on:
+  schedule:
+    - cron: '50 0 * * *'
   workflow_dispatch:
 
 jobs:
   send:
     runs-on: ubuntu-latest
     steps:
-      - name: Send test message
+      - name: Send daily news
         env:
           WECHAT_WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}
         run: |
+          MESSAGE="## 📚 每日学科新闻早报\n\n"
+          
+          MESSAGE="${MESSAGE}### 🏛️ 一、时政要闻\n"
+          NEWS=$(curl -s "https://www.newsnow.co.uk/h/World+News/rss" | grep -o '<title>[^<]*</title>' | head -5 | sed 's/<title>//g;s/<\/title>//g' | grep -v 'NewsNow')
+          MESSAGE="${MESSAGE}${NEWS}\n\n"
+          MESSAGE="${MESSAGE}> 💡 关注国际形势和国家战略，是理解各行业发展方向的基础。\n\n"
+          
+          MESSAGE="${MESSAGE}### 💰 二、经济金融\n"
+          NEWS=$(curl -s "https://www.caixin.com/rss/feed.xml" | grep -o '<title>[^<]*</title>' | head -5 | sed 's/<title>//g;s/<\/title>//g' | grep -v '财新网')
+          MESSAGE="${MESSAGE}${NEWS}\n\n"
+          MESSAGE="${MESSAGE}> 💡 宏观政策与市场动态密切相关，是保研面试的常见素材。\n\n"
+          
+          MESSAGE="${MESSAGE}### 🔬 三、理工科前沿\n"
+          NEWS=$(curl -s "https://news.sciencenet.cn/index.php?mod=rss" | grep -o '<title>[^<]*</title>' | head -5 | sed 's/<title>//g;s/<\/title>//g' | grep -v '科学网')
+          MESSAGE="${MESSAGE}${NEWS}\n\n"
+          MESSAGE="${MESSAGE}> 💡 关注AI、量子、新材料等前沿方向，思考与自身研究的结合。\n\n"
+          
+          MESSAGE="${MESSAGE}### 📖 四、文科动态\n"
+          NEWS=$(curl -s "https://www.thepaper.cn/rss_27884.xml" | grep -o '<title>[^<]*</title>' | head -5 | sed 's/<title>//g;s/<\/title>//g' | grep -v '澎湃')
+          MESSAGE="${MESSAGE}${NEWS}\n\n"
+          MESSAGE="${MESSAGE}> 💡 数字人文、AI写作正在重塑文科研究范式。\n\n"
+          
+          MESSAGE="${MESSAGE}### 💊 五、医学进展\n"
+          NEWS=$(curl -s "https://www.dxy.cn/rss/bbs.xml" | grep -o '<title>[^<]*</title>' | head -5 | sed 's/<title>//g;s/<\/title>//g')
+          MESSAGE="${MESSAGE}${NEWS}\n\n"
+          MESSAGE="${MESSAGE}> 💡 临床需求驱动技术创新，“医学+AI”是重要方向。\n\n"
+          
+          MESSAGE="${MESSAGE}### ⚖️ 六、法学观察\n"
+          NEWS=$(curl -s "https://www.newsnow.co.uk/h/Law/rss" | grep -o '<title>[^<]*</title>' | head -5 | sed 's/<title>//g;s/<\/title>//g' | grep -v 'NewsNow')
+          MESSAGE="${MESSAGE}${NEWS}\n\n"
+          MESSAGE="${MESSAGE}> 💡 新兴技术正在催生新的法律问题，科技法治是未来方向。\n\n"
+          
+          MESSAGE="${MESSAGE}### 🎨 七、艺术资讯\n"
+          NEWS=$(curl -s "https://www.newsnow.co.uk/h/Arts+Culture/rss" | grep -o '<title>[^<]*</title>' | head -5 | sed 's/<title>//g;s/<\/title>//g' | grep -v 'NewsNow')
+          MESSAGE="${MESSAGE}${NEWS}\n\n"
+          MESSAGE="${MESSAGE}> 💡 科技与艺术的融合正在创造新的表达方式。\n\n"
+          
+          MESSAGE="${MESSAGE}### 🌾 八、农学资讯\n"
+          NEWS=$(curl -s "https://www.newsnow.co.uk/h/Agriculture/rss" | grep -o '<title>[^<]*</title>' | head -5 | sed 's/<title>//g;s/<\/title>//g' | grep -v 'NewsNow')
+          MESSAGE="${MESSAGE}${NEWS}\n\n"
+          MESSAGE="${MESSAGE}> 💡 粮食安全与农业科技是国之大者。\n\n"
+          
+          MESSAGE="${MESSAGE}---\n> 📅 每日早报 | 自动生成"
+          
           curl -X POST "$WECHAT_WEBHOOK" \
             -H "Content-Type: application/json" \
-            -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"测试消息：GitHub Actions 运行成功！\"}}"
+            -d "{\"msgtype\":\"markdown\",\"markdown\":{\"content\":\"$MESSAGE\"}}"
