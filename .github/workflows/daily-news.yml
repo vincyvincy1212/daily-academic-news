@@ -1,0 +1,123 @@
+name: 每日学科新闻早报
+
+on:
+  schedule:
+    # 每天北京时间 8:00 执行（UTC 0:00）
+    - cron: '0 0 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  send-news:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 发送学科新闻简报
+        env:
+          WECHAT_WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}
+        run: |
+          # 获取当前日期
+          DATE=$(date '+%Y年%m月%d日')
+          
+          # 构建消息内容
+          MESSAGE="## 📚 每日学科新闻早报（${DATE}）\n\n"
+          
+          # ==================== 一、时政类 ====================
+          MESSAGE="${MESSAGE}### 🏛️ 一、时政要闻\n"
+          
+          # 新华社
+          XINHUA_NEWS=$(curl -s "http://www.xinhuanet.com/" | grep -oE '<h[2-4][^>]*>[^<]*</h[2-4]>' | head -5 | sed 's/<[^>]*>//g' | sed 's/^/- /')
+          if [ -n "$XINHUA_NEWS" ]; then
+            MESSAGE="${MESSAGE}**新华社**\n${XINHUA_NEWS}\n\n"
+          fi
+          
+          MESSAGE="${MESSAGE}> 💡 **时政思考**：关注国家战略布局和政策导向，是理解各行业发展方向的基础。保研面试中，对时政的敏感度往往能体现一个人的格局与视野。\n\n"
+          
+          # ==================== 二、经济金融类 ====================
+          MESSAGE="${MESSAGE}### 💰 二、经济金融\n"
+          
+          # 第一财经
+          YICAI_NEWS=$(curl -s "https://www.yicai.com/" | grep -oE '<a[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)</a>' | head -5 | sed 's/<[^>]*>//g' | sed 's/^/- /')
+          if [ -n "$YICAI_NEWS" ]; then
+            MESSAGE="${MESSAGE}**第一财经**\n${YICAI_NEWS}\n\n"
+          fi
+          
+          # 证券时报
+          STCN_NEWS=$(curl -s "https://www.stcn.com/" | grep -oE '<a[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)</a>' | head -5 | sed 's/<[^>]*>//g' | sed 's/^/- /')
+          if [ -n "$STCN_NEWS" ]; then
+            MESSAGE="${MESSAGE}**证券时报**\n${STCN_NEWS}\n\n"
+          fi
+          
+          MESSAGE="${MESSAGE}> 💡 **经济金融思考**：宏观政策与市场动态密切相关。建议关注货币政策、产业扶持方向，这些往往是保研面试中考察分析能力的常见素材。\n\n"
+          
+          # ==================== 三、理工科类 ====================
+          MESSAGE="${MESSAGE}### 🔬 三、理工科前沿\n"
+          
+          # 科学网
+          SCIENCENET_NEWS=$(curl -s "https://news.sciencenet.cn/" | grep -oE '<a[^>]*href="[^"]*htmlnews[^"]*"[^>]*>([^<]+)</a>' | head -5 | sed 's/<[^>]*>//g' | sed 's/^/- /')
+          if [ -n "$SCIENCENET_NEWS" ]; then
+            MESSAGE="${MESSAGE}**科学网**\n${SCIENCENET_NEWS}\n\n"
+          fi
+          
+          MESSAGE="${MESSAGE}> 💡 **理工科思考**：基础研究与技术突破是科技竞争的核心。保研学子应关注前沿方向（如AI、量子、新材料），思考自己的研究兴趣如何与这些趋势结合。\n\n"
+          
+          # ==================== 四、文科类 ====================
+          MESSAGE="${MESSAGE}### 📖 四、文科动态\n"
+          
+          # 澎湃文化课
+          THEPAPER_NEWS=$(curl -s "https://www.thepaper.cn/list_27884" | grep -oE '<a[^>]*href="[^"]*newsDetail[^"]*"[^>]*>([^<]+)</a>' | head -5 | sed 's/<[^>]*>//g' | sed 's/^/- /')
+          if [ -n "$THEPAPER_NEWS" ]; then
+            MESSAGE="${MESSAGE}**澎湃·文化课**\n${THEPAPER_NEWS}\n\n"
+          fi
+          
+          MESSAGE="${MESSAGE}> 💡 **文科思考**：文化传承与创新同样需要“技术+”思维。无论是数字人文、AI写作，还是跨文化传播，新工具正在重塑文科研究范式。\n\n"
+          
+          # ==================== 五、医学类 ====================
+          MESSAGE="${MESSAGE}### 💊 五、医学进展\n"
+          
+          # 医脉通
+          MEDLIVE_NEWS=$(curl -s "https://news.medlive.cn/all/" | grep -oE '<a[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)</a>' | head -5 | sed 's/<[^>]*>//g' | sed 's/^/- /')
+          if [ -n "$MEDLIVE_NEWS" ]; then
+            MESSAGE="${MESSAGE}**医脉通**\n${MEDLIVE_NEWS}\n\n"
+          fi
+          
+          MESSAGE="${MESSAGE}> 💡 **医学思考**：临床需求驱动技术创新。保研医学生应关注“医学+AI”“精准医疗”等交叉领域，理解科技如何赋能临床诊疗。\n\n"
+          
+          # ==================== 六、法学类 ====================
+          MESSAGE="${MESSAGE}### ⚖️ 六、法学观察\n"
+          
+          # 法治日报
+          LEGAL_NEWS=$(curl -s "http://www.legaldaily.com.cn/" | grep -oE '<a[^>]*href="[^"]*content_[^"]*"[^>]*>([^<]+)</a>' | head -5 | sed 's/<[^>]*>//g' | sed 's/^/- /')
+          if [ -n "$LEGAL_NEWS" ]; then
+            MESSAGE="${MESSAGE}**法治日报**\n${LEGAL_NEWS}\n\n"
+          fi
+          
+          MESSAGE="${MESSAGE}> 💡 **法学思考**：新兴技术（AI、数据、生物技术）正在催生新的法律问题。保研法学生可关注科技法治交叉领域，这是未来法律人才的重要方向。\n\n"
+          
+          # ==================== 七、艺术类 ====================
+          MESSAGE="${MESSAGE}### 🎨 七、艺术资讯\n"
+          
+          # 艺术中国
+          ART_NEWS=$(curl -s "http://art.china.cn/" | grep -oE '<a[^>]*href="[^"]*node_[^"]*"[^>]*>([^<]+)</a>' | head -5 | sed 's/<[^>]*>//g' | sed 's/^/- /')
+          if [ -n "$ART_NEWS" ]; then
+            MESSAGE="${MESSAGE}**艺术中国**\n${ART_NEWS}\n\n"
+          fi
+          
+          MESSAGE="${MESSAGE}> 💡 **艺术思考**：科技与艺术的融合正在创造新的表达方式。保研艺术生可关注数字艺术、AI创作等前沿领域，拓展创作边界。\n\n"
+          
+          # ==================== 八、农学类 ====================
+          MESSAGE="${MESSAGE}### 🌾 八、农学资讯\n"
+          
+          # 中国农业信息网
+          AGRI_NEWS=$(curl -s "http://www.agri.cn/" | grep -oE '<a[^>]*href="[^"]*[0-9]+/[^"]*"[^>]*>([^<]+)</a>' | head -5 | sed 's/<[^>]*>//g' | sed 's/^/- /')
+          if [ -n "$AGRI_NEWS" ]; then
+            MESSAGE="${MESSAGE}**中国农业信息网**\n${AGRI_NEWS}\n\n"
+          fi
+          
+          MESSAGE="${MESSAGE}> 💡 **农学思考**：粮食安全与农业科技是国之大者。保研农学生应关注生物育种、智慧农业、可持续发展等国家战略方向。\n\n"
+          
+          # 结尾
+          MESSAGE="${MESSAGE}---\n> 📅 每日早报由自动程序生成 | 内容来自各网站公开信息"
+          
+          # 发送到企业微信
+          curl -X POST "$WECHAT_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{\"msgtype\":\"markdown\",\"markdown\":{\"content\":\"$MESSAGE\"}}"
