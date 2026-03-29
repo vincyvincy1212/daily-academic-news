@@ -2,6 +2,7 @@ name: 每日学科新闻早报
 
 on:
   schedule:
+    # 每天北京时间 8:50 执行（UTC 0:50）
     - cron: '50 0 * * *'
   workflow_dispatch:
 
@@ -14,7 +15,7 @@ jobs:
           WECHAT_WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: |
-          DATE=$(date '+%Y年%m月%d日')
+          DATE=$(date '+%Y-%m-%d')
           MESSAGE="## 📚 每日学科新闻早报（${DATE}）\n\n"
           
           # ==================== 翻译函数 ====================
