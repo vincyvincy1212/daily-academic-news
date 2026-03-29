@@ -13,36 +13,17 @@ jobs:
       - name: 发送学科新闻简报
         env:
           WECHAT_WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: |
-          # 安装 jq 工具（用于解析JSON）
-          sudo apt-get update
-          sudo apt-get install -y jq
-          
           DATE=$(date '+%Y-%m-%d')
           MESSAGE="## 📚 每日学科新闻早报（${DATE}）\n\n"
           
-          # ==================== 翻译函数 ====================
-          translate() {
-            local text="$1"
-            local prompt="将以下英文新闻标题翻译成中文，每条一行，只返回翻译结果，不要添加任何说明：\n\n$text"
-            
-            curl -s https://api.deepseek.com/v1/chat/completions \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
-              -d "{
-                \"model\": \"deepseek-chat\",
-                \"messages\": [{\"role\": \"user\", \"content\": \"$prompt\"}],
-                \"temperature\": 0.3
-              }" | jq -r '.choices[0].message.content // ""'
-          }
-          
-          # ==================== 1. 时政（英文源+翻译） ====================
+          # ==================== 1. 时政（英文源） ====================
           MESSAGE="${MESSAGE}### 🏛️ 一、时政要闻\n"
           POLITICS_RSS=$(curl -s "https://www.newsnow.co.uk/h/World+News/rss" | grep -o '<title>[^<]*</title>' | sed 's/<title>//g;s/<\/title>//g' | grep -v 'NewsNow' | head -5)
           if [ -n "$POLITICS_RSS" ]; then
-            TRANSLATED=$(translate "$POLITICS_RSS")
-            MESSAGE="${MESSAGE}${TRANSLATED}\n\n"
+            MESSAGE="${MESSAGE}${POLITICS_RSS}\n\n"
+          else
+            MESSAGE="${MESSAGE}今日暂无时政新闻\n\n"
           fi
           MESSAGE="${MESSAGE}> 💡 **时政思考**：关注国家战略布局和国际形势变化，是理解各行业发展方向的基础。保研面试中，对时政的敏感度往往体现一个人的格局与视野。\n\n"
           
@@ -72,35 +53,38 @@ jobs:
           MESSAGE="${MESSAGE}**丁香园**\n${DXY}\n\n"
           MESSAGE="${MESSAGE}> 💡 **医学思考**：临床需求驱动技术创新。保研医学生应关注“医学+AI”“精准医疗”等交叉领域，理解科技如何赋能临床诊疗。\n\n"
           
-          # ==================== 6. 法学（英文源+翻译） ====================
+          # ==================== 6. 法学（英文源） ====================
           MESSAGE="${MESSAGE}### ⚖️ 六、法学观察\n"
           LAW_RSS=$(curl -s "https://www.newsnow.co.uk/h/Law/rss" | grep -o '<title>[^<]*</title>' | sed 's/<title>//g;s/<\/title>//g' | grep -v 'NewsNow' | head -5)
           if [ -n "$LAW_RSS" ]; then
-            LAW_TRANSLATED=$(translate "$LAW_RSS")
-            MESSAGE="${MESSAGE}${LAW_TRANSLATED}\n\n"
+            MESSAGE="${MESSAGE}${LAW_RSS}\n\n"
+          else
+            MESSAGE="${MESSAGE}今日无法学新闻\n\n"
           fi
           MESSAGE="${MESSAGE}> 💡 **法学思考**：新兴技术（AI、数据、生物技术）正在催生新的法律问题。保研法学生可关注科技法治交叉领域，这是未来法律人才的重要方向。\n\n"
           
-          # ==================== 7. 艺术（英文源+翻译） ====================
+          # ==================== 7. 艺术（英文源） ====================
           MESSAGE="${MESSAGE}### 🎨 七、艺术资讯\n"
           ART_RSS=$(curl -s "https://www.newsnow.co.uk/h/Arts+Culture/rss" | grep -o '<title>[^<]*</title>' | sed 's/<title>//g;s/<\/title>//g' | grep -v 'NewsNow' | head -5)
           if [ -n "$ART_RSS" ]; then
-            ART_TRANSLATED=$(translate "$ART_RSS")
-            MESSAGE="${MESSAGE}${ART_TRANSLATED}\n\n"
+            MESSAGE="${MESSAGE}${ART_RSS}\n\n"
+          else
+            MESSAGE="${MESSAGE}今日无艺术新闻\n\n"
           fi
           MESSAGE="${MESSAGE}> 💡 **艺术思考**：科技与艺术的融合正在创造新的表达方式。保研艺术生可关注数字艺术、AI创作等前沿领域，拓展创作边界。\n\n"
           
-          # ==================== 8. 农学（英文源+翻译） ====================
+          # ==================== 8. 农学（英文源） ====================
           MESSAGE="${MESSAGE}### 🌾 八、农学资讯\n"
           AGRI_RSS=$(curl -s "https://www.newsnow.co.uk/h/Agriculture/rss" | grep -o '<title>[^<]*</title>' | sed 's/<title>//g;s/<\/title>//g' | grep -v 'NewsNow' | head -5)
           if [ -n "$AGRI_RSS" ]; then
-            AGRI_TRANSLATED=$(translate "$AGRI_RSS")
-            MESSAGE="${MESSAGE}${AGRI_TRANSLATED}\n\n"
+            MESSAGE="${MESSAGE}${AGRI_RSS}\n\n"
+          else
+            MESSAGE="${MESSAGE}今日无农学新闻\n\n"
           fi
           MESSAGE="${MESSAGE}> 💡 **农学思考**：粮食安全与农业科技是国之大者。保研农学生应关注生物育种、智慧农业、可持续发展等国家战略方向。\n\n"
           
           # 结尾
-          MESSAGE="${MESSAGE}---\n> 📅 每日早报由自动程序生成 | 英文源已自动翻译 | 内容来自各网站公开信息"
+          MESSAGE="${MESSAGE}---\n> 📅 每日早报由自动程序生成 | 内容来自各网站公开信息"
           
           # 发送到企业微信
           curl -X POST "$WECHAT_WEBHOOK" \
