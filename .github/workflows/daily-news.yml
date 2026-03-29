@@ -1,17 +1,33 @@
-name: Daily News
+name: 每日时政早报
 
 on:
+  schedule:
+    # 每天北京时间 8:50 执行
+    - cron: '50 0 * * *'
   workflow_dispatch:
 
 jobs:
-  test:
+  send:
     runs-on: ubuntu-latest
     steps:
-      - name: Send
+      - name: 发送时政早报
         env:
           WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}
         run: |
-          NEWS=$(curl -s "https://news.sciencenet.cn/index.php?mod=rss" | grep -o '<title>[^<]*</title>' | head -3 | sed 's/<title>//g;s/<\/title>//g' | grep -v '科学网')
-          MESSAGE="## 📚 每日早报\n\n### 理工科前沿\n${NEWS}"
+          # 获取新闻（人民日报 + 新华社）
+          NEWS1=$(curl -s "http://www.people.com.cn/rss/politics.xml" | grep -o '<title>[^<]*</title>' | head -3 | sed 's/<title>//g;s/<\/title>//g' | grep -v '人民网')
+          NEWS2=$(curl -s "https://www.xinhuanet.com/politics/news_politics.xml" | grep -o '<title>[^<]*</title>' | head -3 | sed 's/<title>//g;s/<\/title>//g' | grep -v '新华')
+          
+          MESSAGE="## 📰 每日时政早报\n\n"
+          MESSAGE="${MESSAGE}### 一、今日要闻\n"
+          MESSAGE="${MESSAGE}**人民日报**\n${NEWS1}\n\n"
+          MESSAGE="${MESSAGE}**新华社**\n${NEWS2}\n\n"
+          
+          MESSAGE="${MESSAGE}### 二、给大学生的思考\n"
+          MESSAGE="${MESSAGE}> 1. 关注国家政策方向，思考与自己专业的关联\n"
+          MESSAGE="${MESSAGE}> 2. 理解国家战略布局，为未来职业规划做准备\n"
+          MESSAGE="${MESSAGE}> 3. 培养大局观和社会责任感\n\n"
+          
+          MESSAGE="${MESSAGE}---\n> 📅 每日更新 | 自动生成"
           
           curl -X POST "$WEBHOOK" -H "Content-Type: application/json" -d "{\"msgtype\":\"markdown\",\"markdown\":{\"content\":\"$MESSAGE\"}}"
