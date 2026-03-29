@@ -1,12 +1,16 @@
-name: Daily News
+name: Test WeChat
 
 on:
   workflow_dispatch:
 
 jobs:
-  test:
+  send:
     runs-on: ubuntu-latest
     steps:
-      - name: Test
+      - name: Send test message
+        env:
+          WECHAT_WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}
         run: |
-          echo "Hello World"
+          curl -X POST "$WECHAT_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"测试消息：GitHub Actions 运行成功！\"}}"
