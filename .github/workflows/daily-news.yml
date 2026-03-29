@@ -14,13 +14,7 @@ jobs:
         env:
           WECHAT_WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}
         run: |
-          # 用环境变量获取日期，避免直接使用 date 命令
-          YEAR=$(date -u +%Y)
-          MONTH=$(date -u +%m)
-          DAY=$(date -u +%d)
-          DATE="${YEAR}-${MONTH}-${DAY}"
-          
-          MESSAGE="## 📚 每日学科新闻早报（${DATE}）\n\n"
+          MESSAGE="## 📚 每日学科新闻早报\n\n"
           
           # ==================== 1. 时政（英文源） ====================
           MESSAGE="${MESSAGE}### 🏛️ 一、时政要闻\n"
