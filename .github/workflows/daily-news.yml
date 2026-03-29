@@ -1,0 +1,14 @@
+name: Daily News
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send
+        env:
+          WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}
+        run: |
+          curl -X POST "$WEBHOOK" -H "Content-Type: application/json" -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"Hello\"}}"
