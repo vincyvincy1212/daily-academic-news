@@ -11,7 +11,7 @@ jobs:
         env:
           WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}
         run: |
-          NEWS=$(curl -s "https://www.newsnow.co.uk/h/World+News/rss" | grep -o '<title>[^<]*</title>' | head -3 | sed 's/<title>//g;s/<\/title>//g' | grep -v 'NewsNow')
-          MESSAGE="## 📚 每日早报\n\n### 时政要闻\n${NEWS}"
+          NEWS=$(curl -s "https://news.sciencenet.cn/index.php?mod=rss" | grep -o '<title>[^<]*</title>' | head -3 | sed 's/<title>//g;s/<\/title>//g' | grep -v '科学网')
+          MESSAGE="## 📚 每日早报\n\n### 理工科前沿\n${NEWS}"
           
           curl -X POST "$WEBHOOK" -H "Content-Type: application/json" -d "{\"msgtype\":\"markdown\",\"markdown\":{\"content\":\"$MESSAGE\"}}"
